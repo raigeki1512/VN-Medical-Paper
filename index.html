@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
   <style>
+    /* ... [styling unchanged, same as previous] ... */
     :root {
       --bg-dark: #181f2a;
       --panel: #232b3a;
@@ -216,23 +217,32 @@
     <div class="results-table-container" id="results"></div>
     <div class="pagination" id="pagination"></div>
   </div>
-  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
   <script>
     let data = [];
     let filtered = [];
+    let columns = [];
     let currentPage = 1;
     const resultsPerPage = 10;
 
-    // Column keys for table, adjust to your sheet structure
-    const columns = [
-      { key: "TITLE", label: "TITLE" },
-      { key: "AUTHORS", label: "AUTHORS" },
-      { key: "JOURNAL", label: "JOURNAL" },
-      { key: "PUBLISHED", label: "PUBLISHED" },
-      { key: "LINK", label: "LINKS" }
-    ];
+    // Helper: parse HTML table from Google Sheets
+    function parseHTMLTable(htmlText) {
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(htmlText, 'text/html');
+      const table = doc.querySelector('table');
+      if (!table) return { columns: [], data: [] };
+      const rows = Array.from(table.rows);
+      const headerCells = Array.from(rows.shift().cells);
+      const columns = headerCells.map(cell => cell.innerText.trim());
+      const data = rows.map(row => {
+        const obj = {};
+        Array.from(row.cells).forEach((cell, i) => {
+          obj[columns[i]] = cell.innerText.trim();
+        });
+        return obj;
+      });
+      return { columns, data };
+    }
 
-    // Render table
     function renderTable(page = 1) {
       const query = document.getElementById('search').value.trim();
       if (!query) {
@@ -254,23 +264,21 @@
       }
 
       let table = '<table><thead><tr>';
-      columns.forEach(col => table += `<th>${col.label}</th>`);
+      columns.forEach(col => table += `<th>${col}</th>`);
       table += '</tr></thead><tbody>';
       pageData.forEach(row => {
         table += '<tr>';
         columns.forEach(col => {
-          let val = row[col.key] || '';
-          // For TITLE, make it bold and blue if you want
-          if (col.key === "TITLE") {
-            val = `<span style="color:var(--accent);font-weight:600;">${val}</span>`;
-          }
-          // For LINK, make it a PDF link
-          if (col.key === "LINK") {
+          let val = row[col] || '';
+          // PDF Link detection (column name includes 'link' or 'pdf')
+          if (col.toLowerCase().includes('link') || col.toLowerCase().includes('pdf')) {
             if (val && val.startsWith('http')) {
               val = `<a class="link-pdf" href="${val}" target="_blank">View PDF</a>`;
-            } else {
-              val = '';
             }
+          }
+          // Title column highlight
+          else if (col.toLowerCase().includes('title') || col.toLowerCase().includes('tên') || col.toLowerCase().includes('tiêu đề')) {
+            val = `<span style="color:var(--accent);font-weight:600;">${val}</span>`;
           }
           table += `<td>${val}</td>`;
         });
@@ -281,7 +289,6 @@
       renderPagination(page);
     }
 
-    // Fancy pagination: only show first, last, current±1, ellipsis
     function renderPagination(page) {
       const totalPages = Math.ceil(filtered.length / resultsPerPage);
       if (totalPages <= 1) { document.getElementById('pagination').innerHTML = ''; return; }
@@ -317,32 +324,29 @@
       }
       filtered = data.filter(row =>
         columns.some(col => {
-          const val = row[col.key];
-          return val && val.toLowerCase().includes(query);
+          const val = row[col];
+          return val && val.toString().toLowerCase().includes(query);
         })
       );
       currentPage = 1;
       renderTable(currentPage);
     }
 
-    // Results update instantly on input
     document.getElementById('search').addEventListener('input', searchData);
-
-    // Still allow button search if wanted
     document.getElementById('search-btn').addEventListener('click', searchData);
 
-    // Fetch and parse CSV
-    fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSHAAiPFIlWiXooENqd4nDAqOzUfUNUlQoH-qQlCdnFTVmtnyeh1fbS-HNvnCtWb2Xp4YP0Ws8Xm_xS/pub?output=csv')
+    // Fetch and parse HTML table from Google Sheet
+    fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSHAAiPFIlWiXooENqd4nDAqOzUfUNUlQoH-qQlCdnFTVmtnyeh1fbS-HNvnCtWb2Xp4YP0Ws8Xm_xS/pub?output=html')
       .then(response => response.text())
-      .then(csvText => {
-        Papa.parse(csvText, {
-          header: true,
-          complete: function(results) {
-            data = results.data;
-            filtered = [];
-            renderTable();
-          }
-        });
+      .then(htmlText => {
+        const parsed = parseHTMLTable(htmlText);
+        columns = parsed.columns;
+        data = parsed.data;
+        filtered = [];
+        renderTable();
+      })
+      .catch(err => {
+        document.getElementById('results').innerHTML = '<div style="color:red;text-align:center;">Failed to load data.</div>';
       });
   </script>
 </body>
