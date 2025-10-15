@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Google Sheet Search App</title>
+</head>
+<body>
+  <input type="text" id="search" placeholder="Type to search..." />
+  <div id="results"></div>
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+  <script>
+    let data = [];
+
+    // Fetch and parse CSV
+    fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSHAAiPFIlWiXooENqd4nDAqOzUfUNUlQoH-qQlCdnFTVmtnyeh1fbS-HNvnCtWb2Xp4YP0Ws8Xm_xS/pub?output=csv')
+      .then(response => response.text())
+      .then(csvText => {
+        Papa.parse(csvText, {
+          header: true,
+          complete: function(results) {
+            data = results.data;
+          }
+        });
+      });
+
+    document.getElementById('search').addEventListener('input', function(e) {
+      const query = e.target.value.toLowerCase();
+      const filtered = data.filter(row =>
+        Object.values(row).some(val => val && val.toLowerCase().includes(query))
+      );
+      document.getElementById('results').innerHTML =
+        filtered.map(row => `<pre>${JSON.stringify(row, null, 2)}</pre>`).join('');
+    });
+  </script>
+</body>
+</html>
