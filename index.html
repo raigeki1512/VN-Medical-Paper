@@ -325,9 +325,10 @@
       renderTable(currentPage);
     }
 
-    document.getElementById('search').addEventListener('keydown', function(e) {
-      if (e.key === 'Enter') searchData();
-    });
+    // Results update instantly on input
+    document.getElementById('search').addEventListener('input', searchData);
+
+    // Still allow button search if wanted
     document.getElementById('search-btn').addEventListener('click', searchData);
 
     // Fetch and parse CSV
