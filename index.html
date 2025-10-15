@@ -1,99 +1,219 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Google Sheet Search App</title>
+  <title>Vietnamese medical research paper Database</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
   <style>
-    body { font-family: Arial, sans-serif; background: #f5f5f5; margin: 0; }
+    :root {
+      --bg-dark: #181f2a;
+      --panel: #232b3a;
+      --accent: #27eaff;
+      --row-hover: #233043;
+      --table-border: #2b3950;
+      --text-light: #eaf4fd;
+      --text-muted: #8dc9e8;
+      --link: #27eaff;
+      --link-hover: #fff;
+      --input-bg: #182637;
+      --input-border: #27eaff;
+      --input-placeholder: #8dc9e8;
+    }
+    body {
+      background: var(--bg-dark);
+      color: var(--text-light);
+      font-family: 'Segoe UI', Arial, sans-serif;
+      margin: 0;
+      min-height: 100vh;
+    }
     .container {
-      max-width: 900px;
-      margin: 4vw auto;
-      background: #fff;
-      padding: 3vw 5vw 5vw 5vw;
-      border-radius: 12px;
-      box-shadow: 0 4px 24px rgba(0,0,0,0.07);
-      min-height: 380px;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 32px 16px 0 16px;
+    }
+    h1 {
+      text-align: center;
+      font-size: 2.8rem;
+      font-weight: 700;
+      color: var(--accent);
+      margin: 0 0 8px 0;
+      letter-spacing: 1px;
+    }
+    .subtitle {
+      text-align: center;
+      font-size: 1.16rem;
+      color: var(--text-muted);
+      margin-bottom: 3px;
+    }
+    .subtitle2 {
+      text-align: center;
+      font-size: 1.06rem;
+      color: var(--text-muted);
+      margin-bottom: 30px;
     }
     .search-box {
+      width: 100%;
       display: flex;
       justify-content: center;
-      align-items: center;
-      margin-bottom: 32px;
-      flex-wrap: wrap;
+      margin-bottom: 38px;
+    }
+    .search-input-wrapper {
+      position: relative;
+      width: 100%;
+      max-width: 90vw;
+      min-width: 320px;
+      max-width: 1000px;
     }
     #search {
       width: 100%;
-      max-width: 340px;
-      padding: 10px 16px;
-      border-radius: 6px 0 0 6px;
-      border: 1px solid #bbb;
-      font-size: 1rem;
+      padding: 16px 48px 16px 48px;
+      border-radius: 10px;
+      border: 2px solid var(--input-border);
+      background: var(--input-bg);
+      font-size: 1.14rem;
+      color: var(--text-light);
       outline: none;
       box-sizing: border-box;
+      transition: border-color 0.2s;
     }
-    #search-btn {
-      border-radius: 0 6px 6px 0;
-      border: 1px solid #bbb;
-      background: #1976d2;
-      color: white;
-      padding: 0 20px;
-      font-size: 18px;
+    #search:focus {
+      border-color: var(--accent);
+    }
+    #search::placeholder {
+      color: var(--input-placeholder);
+      font-size: 1.07rem;
+    }
+    .search-icon {
+      position: absolute;
+      left: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--input-placeholder);
+      font-size: 1.3em;
+      pointer-events: none;
+    }
+    .search-btn {
+      position: absolute;
+      right: 8px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      color: var(--accent);
+      font-size: 1.18rem;
       cursor: pointer;
-      height: 40px;
-      display: flex;
-      align-items: center;
-      border-left: none;
+      padding: 0 10px;
+      border-radius: 6px;
+      font-weight: 500;
+      transition: color 0.2s, background 0.2s;
     }
-    #search-btn:hover { background: #1565c0; }
+    .search-btn:hover {
+      color: var(--link-hover);
+      background: var(--accent);
+    }
+    .results-table-container {
+      margin-top: 20px;
+      background: var(--panel);
+      border-radius: 8px;
+      box-shadow: 0 2px 18px rgba(0,0,0,0.10);
+      overflow-x: auto;
+    }
     table {
       width: 100%;
       border-collapse: collapse;
-      margin-bottom: 18px;
-      font-size: 0.98rem;
-      word-break: break-word;
+      background: transparent;
+      font-size: 1.08rem;
+      min-width: 650px;
     }
     th, td {
-      padding: 10px 8px;
-      border-bottom: 1px solid #ddd;
-      text-align: left;
+      padding: 18px 12px;
+      vertical-align: top;
     }
-    th { background: #f0f2f5; }
-    tr:hover { background: #fafafa; }
+    th {
+      background: var(--panel);
+      color: var(--accent);
+      text-transform: uppercase;
+      font-size: 1.01em;
+      font-weight: 600;
+      border-bottom: 2px solid var(--table-border);
+      letter-spacing: 0.5px;
+    }
+    tr {
+      border-bottom: 1px solid var(--table-border);
+    }
+    tr:hover td {
+      background: var(--row-hover);
+      transition: background 0.2s;
+    }
+    td {
+      color: var(--text-light);
+      border-bottom: 1px solid var(--table-border);
+      line-height: 1.46;
+    }
+    .link-pdf {
+      color: var(--link);
+      font-weight: 700;
+      text-decoration: none;
+      transition: color 0.15s;
+    }
+    .link-pdf:hover {
+      color: var(--link-hover);
+      text-decoration: underline;
+    }
     .pagination {
       display: flex;
       justify-content: center;
-      flex-wrap: wrap;
+      align-items: center;
       gap: 2px;
-      margin-top: 10px;
+      margin: 24px 0 0 0;
+      flex-wrap: wrap;
     }
     .pagination button {
       border: none;
-      background: #e0e0e0;
-      color: #333;
-      padding: 6px 12px;
+      background: var(--input-bg);
+      color: var(--accent);
+      padding: 6px 16px;
       margin: 0 1px;
-      border-radius: 4px;
+      border-radius: 5px;
       cursor: pointer;
-      min-width: 34px;
+      min-width: 38px;
+      font-size: 1.05em;
+      font-weight: 500;
+      transition: background 0.13s, color 0.13s;
     }
-    .pagination button.active, .pagination button:hover { background: #1976d2; color: white; }
-    .pagination span { padding: 6px 0; min-width: 28px; text-align: center; color: #888; }
-    @media (max-width: 600px) {
-      .container { padding: 4vw 2vw 3vw 2vw; }
-      .search-box { flex-direction: column; }
-      #search { border-radius: 6px 6px 0 0; max-width: 100%; }
-      #search-btn { border-radius: 0 0 6px 6px; width: 100%; margin-top: 4px; }
+    .pagination button.active, .pagination button:hover {
+      background: var(--accent);
+      color: var(--panel);
+    }
+    .pagination span {
+      padding: 6px 0;
+      min-width: 28px;
+      text-align: center;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+    @media (max-width: 700px) {
+      h1 { font-size: 2rem; }
+      .container { padding: 18px 4vw 0 4vw; }
+      th, td { padding: 12px 6px; font-size: 0.99em; }
+      .results-table-container { min-width: 0; }
+      table { min-width: 340px; }
     }
   </style>
 </head>
 <body>
   <div class="container">
+    <h1>Vietnamese medical research paper Database</h1>
+    <div class="subtitle">Browse and search through a curated list of research publications in more than 10 open access</div>
+    <div class="subtitle2">Journals. Published from 1997 to 2025, latest updated on 07/2025!</div>
     <div class="search-box">
-      <input type="text" id="search" placeholder="Type to search..." />
-      <button id="search-btn"><i class="fas fa-search"></i> Search</button>
+      <div class="search-input-wrapper">
+        <i class="fas fa-search search-icon"></i>
+        <input type="text" id="search" placeholder="Search by title, author, or journal..."/>
+        <button class="search-btn" id="search-btn">Search</button>
+      </div>
     </div>
-    <div id="results"></div>
+    <div class="results-table-container" id="results"></div>
     <div class="pagination" id="pagination"></div>
   </div>
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -103,17 +223,72 @@
     let currentPage = 1;
     const resultsPerPage = 10;
 
-    // Responsive pagination (with ellipsis)
+    // Column keys for table, adjust to your sheet structure
+    const columns = [
+      { key: "TITLE", label: "TITLE" },
+      { key: "AUTHORS", label: "AUTHORS" },
+      { key: "JOURNAL", label: "JOURNAL" },
+      { key: "PUBLISHED", label: "PUBLISHED" },
+      { key: "LINK", label: "LINKS" }
+    ];
+
+    // Render table
+    function renderTable(page = 1) {
+      const query = document.getElementById('search').value.trim();
+      if (!query) {
+        document.getElementById('results').innerHTML =
+          `<div style="text-align:center;font-size:1.18em;color:var(--accent);padding:32px;">
+             Total records: <b>${data.length}</b>
+           </div>`;
+        document.getElementById('pagination').innerHTML = '';
+        return;
+      }
+      const start = (page - 1) * resultsPerPage;
+      const end = start + resultsPerPage;
+      const pageData = filtered.slice(start, end);
+
+      if (pageData.length === 0) {
+        document.getElementById('results').innerHTML = '<div style="text-align:center;color:var(--accent);padding:28px;">No results found.</div>';
+        document.getElementById('pagination').innerHTML = '';
+        return;
+      }
+
+      let table = '<table><thead><tr>';
+      columns.forEach(col => table += `<th>${col.label}</th>`);
+      table += '</tr></thead><tbody>';
+      pageData.forEach(row => {
+        table += '<tr>';
+        columns.forEach(col => {
+          let val = row[col.key] || '';
+          // For TITLE, make it bold and blue if you want
+          if (col.key === "TITLE") {
+            val = `<span style="color:var(--accent);font-weight:600;">${val}</span>`;
+          }
+          // For LINK, make it a PDF link
+          if (col.key === "LINK") {
+            if (val && val.startsWith('http')) {
+              val = `<a class="link-pdf" href="${val}" target="_blank">View PDF</a>`;
+            } else {
+              val = '';
+            }
+          }
+          table += `<td>${val}</td>`;
+        });
+        table += '</tr>';
+      });
+      table += '</tbody></table>';
+      document.getElementById('results').innerHTML = table;
+      renderPagination(page);
+    }
+
+    // Fancy pagination: only show first, last, current±1, ellipsis
     function renderPagination(page) {
       const totalPages = Math.ceil(filtered.length / resultsPerPage);
       if (totalPages <= 1) { document.getElementById('pagination').innerHTML = ''; return; }
       let pag = '';
-
-      // Helper to render page button
       function pageBtn(i) {
         return `<button class="${i===page?'active':''}" onclick="goToPage(${i})">${i}</button>`;
       }
-      // Always show first, last, current, current±1, ellipsis
       if (totalPages <= 7) {
         for (let i = 1; i <= totalPages; i++) pag += pageBtn(i);
       } else {
@@ -133,38 +308,6 @@
       renderTable(page);
     };
 
-    function renderTable(page = 1) {
-      // If search box is blank, just show record count
-      const query = document.getElementById('search').value.trim();
-      if (!query) {
-        document.getElementById('results').innerHTML =
-          `<p style="text-align:center;font-size:1.15em;color:#555;">
-             Total records: <b>${data.length}</b>
-           </p>`;
-        document.getElementById('pagination').innerHTML = '';
-        return;
-      }
-      const start = (page - 1) * resultsPerPage;
-      const end = start + resultsPerPage;
-      const pageData = filtered.slice(start, end);
-      if (pageData.length === 0) {
-        document.getElementById('results').innerHTML = '<p>No results found.</p>';
-        document.getElementById('pagination').innerHTML = '';
-        return;
-      }
-      let table = '<table><thead><tr>';
-      Object.keys(pageData[0]).forEach(key => table += `<th>${key}</th>`);
-      table += '</tr></thead><tbody>';
-      pageData.forEach(row => {
-        table += '<tr>';
-        Object.values(row).forEach(val => table += `<td>${val || ''}</td>`);
-        table += '</tr>';
-      });
-      table += '</tbody></table>';
-      document.getElementById('results').innerHTML = table;
-      renderPagination(page);
-    }
-
     function searchData() {
       const query = document.getElementById('search').value.trim().toLowerCase();
       if (!query) {
@@ -173,7 +316,10 @@
         return;
       }
       filtered = data.filter(row =>
-        Object.values(row).some(val => val && val.toLowerCase().includes(query))
+        columns.some(col => {
+          const val = row[col.key];
+          return val && val.toLowerCase().includes(query);
+        })
       );
       currentPage = 1;
       renderTable(currentPage);
@@ -184,6 +330,7 @@
     });
     document.getElementById('search-btn').addEventListener('click', searchData);
 
+    // Fetch and parse CSV
     fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSHAAiPFIlWiXooENqd4nDAqOzUfUNUlQoH-qQlCdnFTVmtnyeh1fbS-HNvnCtWb2Xp4YP0Ws8Xm_xS/pub?output=csv')
       .then(response => response.text())
       .then(csvText => {
