@@ -2,21 +2,89 @@
 <html>
 <head>
   <title>Google Sheet Search App</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
   <style>
-    body { font-family: Arial, sans-serif; background: #f5f5f5; }
-    .container { max-width: 800px; margin: 60px auto; background: #fff; padding: 32px 40px 40px 40px; border-radius: 12px; box-shadow: 0 4px 24px rgba(0,0,0,0.07); }
-    .search-box { display: flex; justify-content: center; align-items: center; margin-bottom: 32px; }
-    #search { width: 300px; padding: 10px 16px; border-radius: 6px 0 0 6px; border: 1px solid #bbb; font-size: 16px; outline: none; }
-    #search-btn { border-radius: 0 6px 6px 0; border: 1px solid #bbb; background: #1976d2; color: white; padding: 0 20px; font-size: 18px; cursor: pointer; height: 40px; display: flex; align-items: center; border-left: none; }
+    body { font-family: Arial, sans-serif; background: #f5f5f5; margin: 0; }
+    .container {
+      max-width: 900px;
+      margin: 4vw auto;
+      background: #fff;
+      padding: 3vw 5vw 5vw 5vw;
+      border-radius: 12px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.07);
+      min-height: 380px;
+    }
+    .search-box {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-bottom: 32px;
+      flex-wrap: wrap;
+    }
+    #search {
+      width: 100%;
+      max-width: 340px;
+      padding: 10px 16px;
+      border-radius: 6px 0 0 6px;
+      border: 1px solid #bbb;
+      font-size: 1rem;
+      outline: none;
+      box-sizing: border-box;
+    }
+    #search-btn {
+      border-radius: 0 6px 6px 0;
+      border: 1px solid #bbb;
+      background: #1976d2;
+      color: white;
+      padding: 0 20px;
+      font-size: 18px;
+      cursor: pointer;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      border-left: none;
+    }
     #search-btn:hover { background: #1565c0; }
-    table { width: 100%; border-collapse: collapse; margin-bottom: 18px; }
-    th, td { padding: 10px 8px; border-bottom: 1px solid #ddd; text-align: left; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 18px;
+      font-size: 0.98rem;
+      word-break: break-word;
+    }
+    th, td {
+      padding: 10px 8px;
+      border-bottom: 1px solid #ddd;
+      text-align: left;
+    }
     th { background: #f0f2f5; }
     tr:hover { background: #fafafa; }
-    .pagination { text-align: center; margin-top: 10px; }
-    .pagination button { border: none; background: #e0e0e0; color: #333; padding: 6px 12px; margin: 0 2px; border-radius: 4px; cursor: pointer; }
+    .pagination {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 2px;
+      margin-top: 10px;
+    }
+    .pagination button {
+      border: none;
+      background: #e0e0e0;
+      color: #333;
+      padding: 6px 12px;
+      margin: 0 1px;
+      border-radius: 4px;
+      cursor: pointer;
+      min-width: 34px;
+    }
     .pagination button.active, .pagination button:hover { background: #1976d2; color: white; }
+    .pagination span { padding: 6px 0; min-width: 28px; text-align: center; color: #888; }
+    @media (max-width: 600px) {
+      .container { padding: 4vw 2vw 3vw 2vw; }
+      .search-box { flex-direction: column; }
+      #search { border-radius: 6px 6px 0 0; max-width: 100%; }
+      #search-btn { border-radius: 0 0 6px 6px; width: 100%; margin-top: 4px; }
+    }
   </style>
 </head>
 <body>
@@ -35,7 +103,47 @@
     let currentPage = 1;
     const resultsPerPage = 10;
 
+    // Responsive pagination (with ellipsis)
+    function renderPagination(page) {
+      const totalPages = Math.ceil(filtered.length / resultsPerPage);
+      if (totalPages <= 1) { document.getElementById('pagination').innerHTML = ''; return; }
+      let pag = '';
+
+      // Helper to render page button
+      function pageBtn(i) {
+        return `<button class="${i===page?'active':''}" onclick="goToPage(${i})">${i}</button>`;
+      }
+      // Always show first, last, current, current±1, ellipsis
+      if (totalPages <= 7) {
+        for (let i = 1; i <= totalPages; i++) pag += pageBtn(i);
+      } else {
+        pag += pageBtn(1);
+        if (page > 3) pag += '<span>...</span>';
+        let start = Math.max(2, page-1);
+        let end = Math.min(totalPages-1, page+1);
+        for (let i = start; i <= end; i++) pag += pageBtn(i);
+        if (page < totalPages-2) pag += '<span>...</span>';
+        pag += pageBtn(totalPages);
+      }
+      document.getElementById('pagination').innerHTML = pag;
+    }
+
+    window.goToPage = function(page) {
+      currentPage = page;
+      renderTable(page);
+    };
+
     function renderTable(page = 1) {
+      // If search box is blank, just show record count
+      const query = document.getElementById('search').value.trim();
+      if (!query) {
+        document.getElementById('results').innerHTML =
+          `<p style="text-align:center;font-size:1.15em;color:#555;">
+             Total records: <b>${data.length}</b>
+           </p>`;
+        document.getElementById('pagination').innerHTML = '';
+        return;
+      }
       const start = (page - 1) * resultsPerPage;
       const end = start + resultsPerPage;
       const pageData = filtered.slice(start, end);
@@ -57,22 +165,13 @@
       renderPagination(page);
     }
 
-    function renderPagination(page) {
-      const totalPages = Math.ceil(filtered.length / resultsPerPage);
-      let pag = '';
-      for (let i = 1; i <= totalPages; i++) {
-        pag += `<button class="${i === page ? 'active' : ''}" onclick="goToPage(${i})">${i}</button>`;
-      }
-      document.getElementById('pagination').innerHTML = pag;
-    }
-
-    window.goToPage = function(page) {
-      currentPage = page;
-      renderTable(page);
-    };
-
     function searchData() {
       const query = document.getElementById('search').value.trim().toLowerCase();
+      if (!query) {
+        filtered = [];
+        renderTable();
+        return;
+      }
       filtered = data.filter(row =>
         Object.values(row).some(val => val && val.toLowerCase().includes(query))
       );
@@ -92,8 +191,8 @@
           header: true,
           complete: function(results) {
             data = results.data;
-            filtered = data; // show all initially
-            renderTable(currentPage);
+            filtered = [];
+            renderTable();
           }
         });
       });
